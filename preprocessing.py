@@ -58,12 +58,12 @@ def check_channels(data):
 
 def check_max_min_dimensions_and_channels(data):
     # Initialize variables to track min/max values
-    min_width = 0
-    min_height = 0
-    max_width = 0
-    max_height = 0
-    min_channels = 0
-    max_channels = 0
+    min_width = float('inf')
+    min_height = float('inf')
+    max_width = float('-inf')
+    max_height = float('-inf')
+    min_channels = float('inf')
+    max_channels = float('-inf')
 
     for idx in range(len(data)):
         image= data[idx][0]
