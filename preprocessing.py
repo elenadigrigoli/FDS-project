@@ -17,37 +17,57 @@ from send2trash import send2trash
 import cv2 as cv
 
 
-def check_dimensions_and_channels(data):
+def check_dimensions(data):
     expected_dimensions = None
 
     for idx in range(len(data)):
-        image, _ = data[idx]  # Get the image and its label (if available)
+        image= data[idx][0]  # Get the image
         
-        # Check the shape of the current image (assuming it's a tensor)
-        image_shape = image.shape  # Typically (C, H, W) for images
+        # Check the shape of the current image
+        image_shape = image.shape[1:3]
         
         # If reference_shape is None, set it to the shape of the first image
         if expected_dimensions is None:
             expected_dimensions = image_shape
+        
         else:
             # Check if the current image's shape matches the reference
             if image_shape != expected_dimensions:
-                print(f"Not all images have the same shape")
+                print(f"Not all images have the same shape.")
                 break
+        
+def check_channels(data):
+    expected_channels = None
 
-
+    for idx in range(len(data)):
+        image = data[idx][0]  # Get the image
+        # Check the shape of the current image
+        n_channels = image.shape[0]
+        
+        # If reference_shape is None, set it to the shape of the first image
+        if expected_channels is None:
+            expected_channels = n_channels
+        
+        else:
+            # Check if the current image's shape matches the reference
+            if n_channels != expected_channels:
+                print(f"Not all images have the same number of channels.")
+                break
+            
 
 
 def check_max_min_dimensions_and_channels(data):
     # Initialize variables to track min/max values
-    min_width = min_height = 0
-    max_width = max_height = 0
+    min_width = 0
+    min_height = 0
+    max_width = 0
+    max_height = 0
     min_channels = 0
     max_channels = 0
 
     for idx in range(len(data)):
-        image, _ = data[idx]
-        width, height, num_channels = image.size[2], image.size[1], image.shape[0]
+        image= data[idx][0]
+        width, height, num_channels = image.shape[1], image.shape[2], image.shape[0]
                         
         min_width = min(min_width, width)
         max_width = max(max_width, width)
@@ -71,7 +91,7 @@ def count_small_images(data, size_threshold=(128, 128), n_channels = 3):
     few_channels = 0
     for idx in range(len(data)):
         image, label = data[idx]
-        width, height, num_channels = image.shape[2], image.shape[1], image.shape[0]
+        width, height, num_channels = image.shape[1], image.shape[2], image.shape[0]
         if width < size_threshold[0] and height < size_threshold[1]:
             small_count += 1
         if num_channels < n_channels:
@@ -83,22 +103,22 @@ def count_small_images(data, size_threshold=(128, 128), n_channels = 3):
     # Output the results for each class
     for class_name, count in small_images_count.items():
         print(f"Class {class_name}: {count[0]} images are smaller than ({size_threshold[0]}x{size_threshold[1]})")
-        print(f'Number of images with less than 3 channels in {class_name}: {count[1]}')    
+        print(f'Number of images with less than {num_channels} channels in {class_name}: {count[1]}')    
 
 
 def delete_invalid_images(data, size_threshold=(224, 224), min_channels=3):
-
-    for idx in range(len(data)):
-        image, _ = data[idx]
-        width, height, num_channels = image.shape[2], image.shape[1], image.shape[0]
-            # Check if the image is smaller than the threshold or has fewer than the required channels
+    # Iterate in reverse order to avoid index shifting
+    for idx in range(len(data) - 1, -1, -1):
+        image= data[idx][0]
+        width, height, num_channels = image.shape[1], image.shape[2], image.shape[0]
+        # Check if the image is smaller than the threshold or has fewer than the required channels
         if (width < size_threshold[0] or height < size_threshold[1]) or num_channels < min_channels:
-                # If the image is invalid, delete it
+            # Delete the invalid image
             data.pop(idx)
             print(f"Deleted image (Size: {width}x{height}, Channels: {num_channels})")
         
-
     print("Invalid images deleted.")
+
 
 
 
