@@ -154,3 +154,46 @@ def augment_images(class_name, input_class_dir, current_count, target_count, aug
         augmented_img_name = f"aug_{i}.jpg"
         augmented_img_path = os.path.join(input_class_dir, augmented_img_name)
         transformed_image.save(augmented_img_path)
+
+
+def compute_histogram(image):
+    """
+    Compute the color histogram of an image (3 channels: R, G, B).
+    Args:
+        image (Tensor): A tensor of shape (C, H, W) where C = 3 (RGB channels).
+    Returns:
+        histograms (list): List of 3 histograms for each channel.
+    """
+    channels = image.view(3, -1)
+    histograms = []
+    
+    for channel in channels:
+        hist = torch.histc(channel, bins=256, min=0, max=1)
+        histograms.append(hist)
+    
+    return histograms
+
+def split_set(dataset):
+    x_train = []
+    y_train = []
+
+    for data_point in dataset:
+        features, labels = data_point  # unpack the tuple
+        x_train.append(features)
+        y_train.append(torch.tensor(labels))
+
+    # Optionally, convert the lists to tensors if needed
+    x_train = torch.stack(x_train)  # Convert to tensor
+    y_train = torch.stack(y_train)  # Convert to tensor
+
+    return x_train, y_train
+
+
+def extract_data_from_set(dataset):
+    imgs = []
+    labels = []
+    for data in dataset:
+        inputs, targets = data
+        imgs.append(inputs.numpy())  # Convert to numpy array
+        labels.append(targets)
+    return np.concatenate(imgs), np.concatenate(labels).astype(int)
