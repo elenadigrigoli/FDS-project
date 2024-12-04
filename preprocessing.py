@@ -13,9 +13,10 @@ from sklearn.metrics import accuracy_score, top_k_accuracy_score, precision_scor
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from PIL import Image
-from send2trash import send2trash
 import cv2 as cv
-import time
+from collections import Counter
+
+
 
 
 def check_dimensions(data):
@@ -42,6 +43,9 @@ def check_dimensions(data):
     if all_same:
         print(f'All images have the same shape: {expected_dimensions}.')
 
+
+
+
 def check_channels(data):
     expected_channels = None
     all_same = True
@@ -65,6 +69,8 @@ def check_channels(data):
         print(f'All images have {expected_channels} channels.')
 
 
+
+
 def check_max_min_dimensions(data):
     # Initialize variables to track min/max values
     min_width = float('inf')
@@ -86,52 +92,75 @@ def check_max_min_dimensions(data):
     print(f"Min Height: {min_height}, Max Height: {max_height}")
 
 
-def count_small_images(data, size_threshold=(128, 128)):
-    # Initialize a dictionary to store the count of small images for each class
-    small_images_count = {}
-    tot_small = 0
-    class_map = {k:v for k,v in enumerate(data.classes)}
-    for idx in range(len(data)):
-        image, label = data[idx]
-        width, height = image.shape[1], image.shape[2]
-
-        if label not in small_images_count:
-            small_images_count[label] = 0
-        
-        # Update counts for class
-        if width < size_threshold[0] and height < size_threshold[1]:
-            small_images_count[label] += 1
-            tot_small += 1
 
 
-    # Output the results for each class
-    for label, counts in small_images_count.items():
-        class_name = class_map[label]
-        print(f"Class {class_name}: {counts} images have at least one dimension smaller than {size_threshold[0]} or {size_threshold[1]}.")
-    print(f'Total invalid images: {tot_small}')
-
-def delete_invalid_images(data, size_threshold=(224, 224)):
-    
-    #valid_data = [image for image in data if image[0].shape[1] >= size_threshold[0] and image[0].shape[2] >= size_threshold[1]]
-    
-    valid_data = []
+def plot_image_size_histograms(data, bins=100):
+    heights = []
+    widths = []
 
     for idx in range(len(data)):
-        image = data[idx][0]
-        width, height = image.shape[1], image.shape[2]
-        # Check if the image is bigger than the threshold
-        if width >= size_threshold[0] and height >= size_threshold[1]:
-            # Append the valid image
-            valid_data.append(data[idx])
-        else:
-            print(f"Deleted image (Size: {width}x{height}).")
+        image, _ = data[idx]
+        _, height, width = image.shape
+        heights.append(height)
+        widths.append(width)
     
+    plt.figure(figsize=(12, 6))
 
-        
-    print("Invalid images deleted.")
-    print(f'{len(data)-len(valid_data)} images removed.')
+    plt.subplot(1, 2, 1)
+    plt.hist(heights, bins=bins, color='blue', alpha=0.7)
+    plt.title('Histogram of Image Heights')
+    plt.xlabel('Height (pixels)')
+    plt.ylabel('Frequency')
+    plt.xlim(0, 2000)
 
-    return valid_data
+    plt.subplot(1, 2, 2)
+    plt.hist(widths, bins=bins, color='green', alpha=0.7)
+    plt.title('Histogram of Image Widths')
+    plt.xlabel('Width (pixels)')
+    plt.ylabel('Frequency')
+    plt.xlim(0, 2000)
 
 
-#def resize_and_change_n_channels(folder, size = (224, 224), n_channels = 3):
+    plt.tight_layout()
+    plt.show()
+
+
+
+def count_images_per_class(data):
+    labels = [label for _, label in data]
+    
+    class_counts = Counter(labels)
+    
+    for class_idx, count in class_counts.items():
+        class_name = data.classes[class_idx]
+        print(f"Class {class_name}: {count} images")
+
+
+
+def augment_images(class_name, input_class_dir, output_class_dir, current_count, target_count, augmentations):
+    # Creare la directory della classe nel dataset di output
+    os.makedirs(output_class_dir, exist_ok=True)
+
+    # Copiare le immagini originali nella cartella di output
+    for img_file in os.listdir(input_class_dir):
+        if img_file.endswith(('.jpg', '.jpeg', '.png')):
+            img_path = os.path.join(input_class_dir, img_file)
+            img = Image.open(img_path).convert("RGB")  # Caricare immagine
+            img.save(os.path.join(output_class_dir, os.path.basename(img_file)))
+
+    # Generare immagini augmentate fino a raggiungere il target
+    augmentation_needed = target_count - current_count
+    print(f"Augmenting {augmentation_needed} images for class: {class_name}")
+
+    images = [os.path.join(input_class_dir, img) for img in os.listdir(input_class_dir) if img.endswith(('.jpg', '.jpeg', '.png'))]
+
+    for i in range(augmentation_needed):
+        # Scegliere un'immagine casuale dalla classe
+        img_path = images[i % len(images)]
+        img = Image.open(img_path).convert("RGB")
+        transformed_image = augmentations(img)
+
+        # Salvare l'immagine augmentata
+        augmented_img_name = f"aug_{i}.jpg"
+        augmented_img_path = os.path.join(output_class_dir, augmented_img_name)
+        transformed_image.save(augmented_img_path)
