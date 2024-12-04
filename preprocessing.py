@@ -137,17 +137,7 @@ def count_images_per_class(data):
 
 
 
-def augment_images(class_name, input_class_dir, output_class_dir, current_count, target_count, augmentations):
-    # Creare la directory della classe nel dataset di output
-    os.makedirs(output_class_dir, exist_ok=True)
-
-    # Copiare le immagini originali nella cartella di output
-    for img_file in os.listdir(input_class_dir):
-        if img_file.endswith(('.jpg', '.jpeg', '.png')):
-            img_path = os.path.join(input_class_dir, img_file)
-            img = Image.open(img_path).convert("RGB")  # Caricare immagine
-            img.save(os.path.join(output_class_dir, os.path.basename(img_file)))
-
+def augment_images(class_name, input_class_dir, current_count, target_count, augmentations):
     # Generare immagini augmentate fino a raggiungere il target
     augmentation_needed = target_count - current_count
     print(f"Augmenting {augmentation_needed} images for class: {class_name}")
@@ -160,7 +150,7 @@ def augment_images(class_name, input_class_dir, output_class_dir, current_count,
         img = Image.open(img_path).convert("RGB")
         transformed_image = augmentations(img)
 
-        # Salvare l'immagine augmentata
+        # Salvare l'immagine augmentata nella stessa cartella della classe
         augmented_img_name = f"aug_{i}.jpg"
-        augmented_img_path = os.path.join(output_class_dir, augmented_img_name)
+        augmented_img_path = os.path.join(input_class_dir, augmented_img_name)
         transformed_image.save(augmented_img_path)
