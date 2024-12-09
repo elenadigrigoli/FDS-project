@@ -3,10 +3,10 @@ import numpy as np
 import cv2 as cv
 
 # Function to load images from a directory
-def load_images_from_folders(root_dir, image_size=(256, 256)):
+def load_images(root_dir, image_size=(256, 256)):
     images = []
     labels = []
-    class_names = []
+    class_names = []    
     
     # Traverse through class folders
     for class_index, class_name in enumerate(os.listdir(root_dir)):
