@@ -1,5 +1,9 @@
 import os
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Dense, Flatten
+from tensorflow.keras.optimizers import Adam
 import cv2 as cv
 
 # Function to load images from a directory
@@ -78,3 +82,15 @@ def extract_features(path_directory):
             labels.append(class_label)
     
     return np.array(features), np.array(labels)
+
+
+def sparse_autoencoder(input_dim, hidden_dim, sparsity_weight):
+    input_layer = Input(shape=(input_dim,))
+    hidden_layer = Dense(hidden_dim, activation='relu', activity_regularizer=tf.keras.regularizers.l1(sparsity_weight))(input_layer)
+    output_layer = Dense(input_dim, activation='sigmoid')(hidden_layer)
+    
+    autoencoder = Model(inputs=input_layer, outputs=output_layer)
+    encoder = Model(inputs=input_layer, outputs=hidden_layer)  # Encoder for feature extraction
+    
+    autoencoder.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
+    return autoencoder, encoder
