@@ -67,7 +67,7 @@ def extract_features(path_directory):
             img = cv.imread(os.path.join(path_directory, filename))
             
             # Compute the histogram for the image (RGB)
-            hist = compute_histogram(img)
+            hist = calculate_histograms(img)
             
             # Add the histogram to the feature list
             features.append(hist)
