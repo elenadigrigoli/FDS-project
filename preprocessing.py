@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import torch
 from torchvision import datasets, transforms
+from torchvision.datasets import ImageFolder
+from torch.utils.data import random_split, DataLoader
 import tensorflow as tf
 from skimage import io, color, transform
 import sklearn
@@ -197,3 +199,57 @@ def extract_data_from_set(dataset):
         imgs.append(inputs.numpy())  # Convert to numpy array
         labels.append(targets)
     return np.concatenate(imgs), np.concatenate(labels).astype(int)
+
+def create_dataloaders(dataset_path, train_split=0.7, val_split=0.2, test_split=0.1, batch_size=32):
+    """
+    Crea DataLoader per training, validation e test set.
+
+    Args:
+        dataset_path (str): Percorso alla cartella principale del dataset.
+        train_split (float): Percentuale del dataset da usare per il training (default: 70%).
+        val_split (float): Percentuale del dataset da usare per la validazione (default: 20%).
+        test_split (float): Percentuale del dataset da usare per il test (default: 10%).
+        batch_size (int): Dimensione del batch per i DataLoader (default: 32).
+
+    Returns:
+        tuple: DataLoader per train, validation e test set.
+    """
+    # Trasformazioni delle immagini
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),  # Ridimensiona le immagini
+        transforms.ToTensor(),         # Converte in tensori
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])  # Normalizza i pixel
+    ])
+
+    # Carica l'intero dataset
+    full_dataset = datasets.ImageFolder(root=dataset_path, transform=transform)
+
+    # Calcola le dimensioni dei sotto-dataset
+    dataset_size = len(full_dataset)
+    train_size = int(train_split * dataset_size)
+    val_size = int(val_split * dataset_size)
+    test_size = dataset_size - train_size - val_size
+
+    # Suddividi il dataset
+    train_dataset, val_dataset, test_dataset = random_split(
+        full_dataset, [train_size, val_size, test_size]
+    )
+
+    # Crea DataLoader per ogni sotto-dataset
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    return train_loader, val_loader, test_loader
+
+def extract_features(autoencoder, data_loader):
+    autoencoder.eval()
+    features = []
+    labels = []
+    with torch.no_grad():
+        for images, label_batch in data_loader:
+            images = images.view(images.size(0), -1)  # Flatten immagini
+            encoded, _ = autoencoder(images)
+            features.append(encoded.numpy())
+            labels.append(label_batch.numpy())
+    return np.vstack(features), np.hstack(labels)
