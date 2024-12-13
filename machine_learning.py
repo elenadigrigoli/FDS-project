@@ -5,7 +5,7 @@ import keras
 import cv2 as cv
 
 # Function to load images from a directory
-def load_images(root_dir, image_size=(256, 256)):
+def load_images(root_dir, image_size=(256, 256), gray=False):
     images = []
     labels = []
     class_names = []    
@@ -18,7 +18,10 @@ def load_images(root_dir, image_size=(256, 256)):
             for image_name in os.listdir(class_path):
                 image_path = os.path.join(class_path, image_name)
                 # Read and resize image
-                img = cv.imread(image_path, cv.IMREAD_COLOR)
+                if gray:
+                    img = cv.imread(image_path, cv.IMREAD_GRAYSCALE)
+                else:
+                    img = cv.imread(image_path, cv.IMREAD_COLOR)
                 if img is not None:  # Ensure image is valid
                     img = cv.resize(img, image_size, interpolation=cv.INTER_AREA)
                     images.append(img)
