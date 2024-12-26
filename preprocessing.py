@@ -10,12 +10,14 @@ from torch.utils.data import random_split, DataLoader
 import tensorflow as tf
 from skimage import io, color, transform
 import sklearn
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, top_k_accuracy_score, precision_score, recall_score, f1_score, classification_report
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from PIL import Image
 import cv2 as cv
+import shutil
 from collections import Counter
 
 
@@ -253,3 +255,32 @@ def extract_features(autoencoder, data_loader):
             features.append(encoded.numpy())
             labels.append(label_batch.numpy())
     return np.vstack(features), np.hstack(labels)
+
+
+# Function to split a dataset
+def split_dataset(original_dir, train_dir, test_dir, test_size=0.2, random_state=42):
+    for class_name in os.listdir(original_dir):
+        class_path = os.path.join(original_dir, class_name)
+        
+        # Ensure it is a directory
+        if not os.path.isdir(class_path):
+            continue
+        
+        # Get all file paths for the current class
+        files = [os.path.join(class_path, f) for f in os.listdir(class_path) if os.path.isfile(os.path.join(class_path, f))]
+        
+        # Split into train and test
+        train_files, test_files = train_test_split(files, test_size=test_size, random_state=random_state)
+        
+        # Create subdirectories for each class in train/test
+        train_class_dir = os.path.join(train_dir, class_name)
+        test_class_dir = os.path.join(test_dir, class_name)
+        os.makedirs(train_class_dir, exist_ok=True)
+        os.makedirs(test_class_dir, exist_ok=True)
+        
+        # Copy files to the respective directories
+        for file in train_files:
+            shutil.copy(file, train_class_dir)
+        for file in test_files:
+            shutil.copy(file, test_class_dir)
+        print(f"Class {class_name} -> Train: {len(train_files)} | Test: {len(test_files)}")
