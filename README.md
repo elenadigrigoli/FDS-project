@@ -18,11 +18,11 @@ This study aims to contribute to these efforts by exploring multiple approaches 
   
 * **data_preparation_utils.py**: Python file containing the functions we created and used in `Data Preparation.ipynb`;
   
-* **Machine Learning.ipynb**: Jupyter Notebook containing our machine learning approach and results;
+* **Machine_Learning.ipynb**: Jupyter Notebook containing our machine learning approach and results;
   
 * **machine_learning_utils.py**: Python file containing the functions we created and used in `Machine Learning.ipynb`;
   
-* **Deep Learning.ipynb**: Jupyter Notebook containing our deep learning approach and results;
+* **Deep_Learning.ipynb**: Jupyter Notebook containing our deep learning approach and results;
   
 * **deep_learning_utils.py**: Python file containing the functions we created and used in `Deep Learning.ipynb`;
 
