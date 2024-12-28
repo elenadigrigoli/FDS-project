@@ -11,7 +11,7 @@ from torch.utils.data import random_split, DataLoader
 
 
 
-# Function to load images from a directory
+# Function to load images from the directory
 def load_images(root_dir, image_size=(256, 256), gray=False):
     images = []
     labels = []
@@ -74,38 +74,6 @@ def extract_features(path_directory):
     
     return np.array(features), np.array(labels)
 
-
-
-def create_dataloaders(dataset_path, train_split=0.7, val_split=0.2, test_split=0.1, batch_size=32):
-
-
-    # Transform images
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-
-    # Load dataset
-    full_dataset = datasets.ImageFolder(root=dataset_path, transform=transform)
-
-    # Compute sets size
-    dataset_size = len(full_dataset)
-    train_size = int(train_split * dataset_size)
-    val_size = int(val_split * dataset_size)
-    test_size = dataset_size - train_size - val_size
-
-    # Split the dataset
-    train_dataset, val_dataset, test_dataset = random_split(
-        full_dataset, [train_size, val_size, test_size]
-    )
-
-    # Create DataLoader for each part of the data
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-    return train_loader, val_loader, test_loader
 
 
 def extract_features_with_autoencoder(autoencoder, data_loader):
