@@ -26,6 +26,8 @@ This study aims to contribute to these efforts by exploring multiple approaches 
   
 * **deep_learning_utils.py**: Python file containing the functions we created and used in `Deep Learning.ipynb`;
 
+* **Waste Classification.pdf**: PDF containing the final report.
+
 
 ## References
 
